@@ -1,0 +1,7 @@
+gym
+stable-baselines3[extra]
+vizdoom
+opencv-python
+gym_super_mario_bros
+nes_py
+shimmy>=0.2.1
