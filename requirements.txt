@@ -1,7 +1,7 @@
-gym
-stable-baselines3[extra]
+gymnasium
+stable-baselines[extra]
 vizdoom
 opencv-python
 gym_super_mario_bros
 nes_py
-shimmy>=0.2.1
+Shimmy>=0.2.1
