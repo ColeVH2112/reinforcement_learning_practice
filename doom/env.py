@@ -1,13 +1,20 @@
-from gym import Env, spaces
+import gymnasium as gym
+from gymnasium import spaces 
 from vizdoom import DoomGame
 import cv2
 import numpy as np
+import os
+import vizdoom
 
 class VizDoomGym(Env):
     def __init__(self, render=False, config=None):
         super().__init__()
         #Set up game engine
         self.game = DoomGame()
+        if config is None:
+            base_path = os.path.dirname(vizdoom.__file__)
+            config = 0s.path.join(base_path, 'scenarios', 'deadly_corridor.cfg')
+            
         self.game.load_config(config)
         self.game.set_window_visible(render) #training? False : True
         self.game.init()
@@ -35,6 +42,7 @@ class VizDoomGym(Env):
 
         #screen
         state = self.game.get_state()
+        info = {}
 
         if state:
             #simplify screen to grayscale
@@ -58,7 +66,8 @@ class VizDoomGym(Env):
             #incentive struct
             reward = move_reward + damage_taken_delta*10 + hicount_delta*200 + ammo_delta*5
 
-            info = {"health": health, "ammo":ammo}
+            info["ammo"] = ammo
+            info["health"] = health
 
         else:
             #Game over -> black
@@ -66,7 +75,11 @@ class VizDoomGym(Env):
             info = {}
 
         done = self.game.is_episode_finished()
-        return state,reward,done,info
+
+        terminated = done
+        truncated = False
+        
+        return state, reward, terminated, truncated, info
 
     
     def grayscale(self, observation):
@@ -76,12 +89,14 @@ class VizDoomGym(Env):
         return state
 
     def reset(self):
+        super().reset(seed=seed)
+        
         self.game.new_episode()
         state = self.game.get_state().screen_buffer
         self.damage_taken = 0
         self.hitcount = 0
         self.ammo = 52
-        return self.grayscale(state)
+        return self.grayscale(state), {}
 
     def close(self):
         self.game.close()
