@@ -6,14 +6,14 @@ import numpy as np
 import os
 import vizdoom
 
-class VizDoomGym(Env):
+class VizDoomGym(gym.Env):
     def __init__(self, render=False, config=None):
         super().__init__()
         #Set up game engine
         self.game = DoomGame()
         if config is None:
             base_path = os.path.dirname(vizdoom.__file__)
-            config = 0s.path.join(base_path, 'scenarios', 'deadly_corridor.cfg')
+            config = os.path.join(base_path, 'scenarios', 'deadly_corridor.cfg')
             
         self.game.load_config(config)
         self.game.set_window_visible(render) #training? False : True
@@ -21,7 +21,7 @@ class VizDoomGym(Env):
 
         # set up observation space
         #Shrink "screen" size in order to speed training
-        self.observation_space = space.Box(low=0, high=255, shape=(100,160,1), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(100,160,1), dtype=np.uint8)
 
         #Define Action: 7 buttons- left, right, shoot,...
         self.action_space = spaces.Discrete(7)
