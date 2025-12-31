@@ -17,3 +17,11 @@ venv/
 .DS_Store
 
 \*Minibuf*
+
+# RL Output
+train_doom/
+logs_doom/
+mario_model.zip
+*.zip
+*.pkl
+tensorboard_logs/

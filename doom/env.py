@@ -27,7 +27,7 @@ class VizDoomGym(gym.Env):
         self.action_space = spaces.Discrete(7)
 
         #Tracking var. for reward
-        self.damage_take = 0
+        self.damage_taken = 0
         self.hitcount = 0
         self.ammo = 52
 
@@ -37,7 +37,7 @@ class VizDoomGym(gym.Env):
         actions = np.identity(7, dtype=np.uint8)
 
         #make move-- can speed up by increasing second int argument(repeat action " " times)
-        move_reward = self.game.make_action(actions[action],2)
+        move_reward = self.game.make_action(actions[action],4)
         reward = 0
 
         #screen
@@ -51,10 +51,18 @@ class VizDoomGym(gym.Env):
 
             #Reward Shaping
             game_variables = self.game.get_state().game_variables
-            health, damage_taken, hitcount, ammo = game_variables
+            
+            # Handle different numbers of game variables
+            # deadly_corridor.cfg typically only has health (1 variable)
+            # Extract what's available, use defaults for missing ones
+            num_vars = len(game_variables)
+            health = game_variables[0] if num_vars > 0 else 100
+            damage_taken = game_variables[1] if num_vars > 1 else 0
+            hitcount = game_variables[2] if num_vars > 2 else 0
+            ammo = game_variables[3] if num_vars > 3 else 52
 
             #calc changes 
-            damage_taken_delta = -damage_taken + self.damge_taken
+            damage_taken_delta = -damage_taken + self.damage_taken
             hitcount_delta = hitcount - self.hitcount
             ammo_delta = ammo - self.ammo
 
@@ -64,7 +72,7 @@ class VizDoomGym(gym.Env):
             self.ammo = ammo
 
             #incentive struct
-            reward = move_reward + damage_taken_delta*10 + hicount_delta*200 + ammo_delta*5
+            reward = move_reward + damage_taken_delta*10 + hitcount_delta*200 + ammo_delta*5
 
             info["ammo"] = ammo
             info["health"] = health
@@ -88,15 +96,20 @@ class VizDoomGym(gym.Env):
         state = np.reshape(resize, (100,160,1))
         return state
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         
         self.game.new_episode()
-        state = self.game.get_state().screen_buffer
+        game_state = self.game.get_state()
+        if game_state:
+            state = game_state.screen_buffer
+            state = self.grayscale(state)
+        else:
+            state = np.zeros(self.observation_space.shape)
         self.damage_taken = 0
         self.hitcount = 0
         self.ammo = 52
-        return self.grayscale(state), {}
+        return state, {}
 
     def close(self):
         self.game.close()
