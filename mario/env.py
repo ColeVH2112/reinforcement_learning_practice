@@ -13,7 +13,18 @@ class MarioGym(gym.Env):
         # --- THE FIX ---
         # Instead of gym_super_mario_bros.make(), which adds the broken TimeLimit wrapper,
         # we instantiate the raw environment class directly.
+        # For rendering, we need to pass render_mode or set it up properly
         self.env = SuperMarioBrosEnv()
+        
+        # Enable rendering if requested
+        self.render_mode = render
+        if render:
+            # Make sure the window is visible for rendering
+            try:
+                # Some versions need this to enable rendering
+                self.env.render()
+            except:
+                pass
         
         # Apply the Joypad wrapper (reduces buttons from 256 -> 7)
         self.env = JoypadSpace(self.env, SIMPLE_MOVEMENT)
@@ -21,10 +32,6 @@ class MarioGym(gym.Env):
         # Define the shapes for the Neural Network (Gymnasium API)
         self.observation_space = spaces.Box(low=0, high=255, shape=(84, 84, 1), dtype=np.uint8)
         self.action_space = spaces.Discrete(7)
-        
-        # Render setup
-        if render:
-            self.env.reset()
 
     def step(self, action):
         # 1. Step the Old Env (Returns 4 values)
