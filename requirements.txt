@@ -5,4 +5,4 @@ opencv-python
 gym_super_mario_bros
 nes_py
 Shimmy>=0.2.1
-numpy
+numpy<2.0  # nes_py is incompatible with NumPy 2.0
